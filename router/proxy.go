@@ -12,7 +12,8 @@ func Proxy(r *gin.Engine) {
 
 	// 定义反向代理的目标地址
 	//targetURL := "http://localhost:8898"
-	targetURL := "http://127.0.0.1:8000"
+	//targetURL := "http://127.0.0.1:8000"
+	targetURL := "http://60.204.170.225:8500"
 	// 创建一个反向代理的 Transport
 	target, _ := url.Parse(targetURL)
 	proxy := httputil.NewSingleHostReverseProxy(target)

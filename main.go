@@ -9,7 +9,7 @@ func main() {
 	// 创建一个新的 Gin 实例
 	r := gin.Default()
 
-	//获取IP
+	//获取IP存入redis
 	r.Use(router.GetIp())
 
 	//转发请求
