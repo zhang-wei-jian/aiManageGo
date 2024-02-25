@@ -10,6 +10,9 @@ import (
 	"strconv"
 )
 
+// 最多可用次數
+var AvailableNumber = 10
+
 func Chat(r *gin.Engine) {
 
 	// 处理聊天请求
@@ -35,22 +38,24 @@ func Chat(r *gin.Engine) {
 			count = 0
 		}
 
-		if count <= 10 {
+		if count <= AvailableNumber {
 			go func() {
 				// 增加计数值
 				count++
-
 				// 将新值存储回 Redis
 				err = models.Rdb.Set(ip, count, 0).Err()
 				if err != nil {
-					panic(err)
+					//panic(err)//程序退出
+					fmt.Println("redis连接出现问题:", err)
 				}
 
 				fmt.Println("获取IP值:", count)
 			}()
+			//ai問答
 			ResponseProxyMessage(c)
 
 		} else {
+			//不可以
 			ResponseCustomMessage(c)
 		}
 
@@ -65,7 +70,7 @@ func ResponseCustomMessage(c *gin.Context) {
 	c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Requested-With")
 	c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 
-	str := "不好意思你今天不能用太多，明天再送你吧!See You"
+	str := "不好意思今天不能用太多，明天再送你吧!See You"
 	c.Header("Content-Type", "text/plain")
 	c.Header("Cache-Control", "no-cache")
 	c.Header("Connection", "keep-alive")
