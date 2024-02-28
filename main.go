@@ -21,6 +21,8 @@ func main() {
 	//转发请求
 	//router.Proxy(r)
 	router.User(r)
+
+	//chat请求openai格式
 	router.Chat(r)
 	// 启动 Gin 服务器，监听端口
 	r.Run(":8080")
