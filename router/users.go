@@ -38,7 +38,7 @@ func randStr(str_len int) string {
 func User(r *gin.Engine) {
 
 	loginRouter := r.Group("/users")
-	loginRouter.Use(JWTMiddleware())
+	loginRouter.Use(JWTMiddleware("/users/login"))
 	{
 		loginRouter.POST("login", func(c *gin.Context) {
 
@@ -121,12 +121,21 @@ func parseTokenHs256(token_string string) (*UserClaims, error) {
 	return claims, nil
 }
 
-func JWTMiddleware() gin.HandlerFunc {
+// JWTMiddleware jwt校验中间件，
+// 进行前置校验操作，如果逻辑不正确就直接返回请求错误，否则return结束通过中间件通过请求
+func JWTMiddleware(allowPath ...string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// 不需要登录校验
 		//if ctx.Request.URL.Path == "/users/login" || ctx.Request.URL.Path == "/v1/chat/completions" {
-		if ctx.Request.URL.Path == "/users/login" {
-			return
+		//if ctx.Request.URL.Path == "/users/login" {
+		//	return
+		//}
+
+		// 检查当前请求的路径是否在允许的路径列表中
+		for _, path := range allowPath {
+			if ctx.Request.URL.Path == path {
+				return // 如果是允许的路径，则直接返回，不执行登录校验逻辑
+			}
 		}
 
 		tokenHeader := ctx.GetHeader("Authorization")
@@ -148,7 +157,7 @@ func JWTMiddleware() gin.HandlerFunc {
 		//claims := &UserClaims{}
 		claims := &UserClaims{}
 		token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
-			return []byte("95osj3fUD7fo0mlYdDbncXz4VD2igvf0"), nil
+			return []byte(sign_key), nil
 		})
 		if err != nil {
 			// token 不对，有人搞你
@@ -177,11 +186,14 @@ func JWTMiddleware() gin.HandlerFunc {
 
 			return
 		}
+
 		// 为了演示，假设十秒钟刷新一次
 		if claims.ExpiresAt.Time.Sub(now) < time.Second*50 {
 			// 刷新
+
+			fmt.Println("tong guo ")
 			claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(time.Minute))
-			tokenStr, err = token.SignedString([]byte("95osj3fUD7fo0mlYdDbncXz4VD2igvf0"))
+			tokenStr, err = token.SignedString([]byte(sign_key))
 			if err != nil {
 				// 因为刷新这个事情，并不是一定要做的，所以这里可以考虑打印日志
 				// 暂时这样打印
